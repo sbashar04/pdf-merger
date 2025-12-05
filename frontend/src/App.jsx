@@ -1,12 +1,45 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import './App.css';
 
 function App() {
   const [files, setFiles] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false); // Dragging state
+
+  // Create a ref for input element
+  const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
-    setFiles(e.target.files);
+    if (e.target.files && e.target.files.length > 0) {
+      setFiles(e.target.files);
+    }
+  };
+
+  // Trigger click to hidden input
+  const handleBoxClick = () => {
+    fileInputRef.current.click();
+  };
+
+  // On drag start
+  const handleDragOver = (e) => {
+    e.preventDefault(); // Prevent the browser's default behavior
+    setIsDragging(true);
+  };
+
+  // If the dragging is outside the box
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  // On file drag
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    // Update state on file drag
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      setFiles(e.dataTransfer.files);
+    }
   };
 
   const handleMerge = async () => {
@@ -53,15 +86,30 @@ function App() {
       <p className="subtitle">Combine multiple PDFs into one simple file.</p>
 
       <div className="upload-area">
+        {/* Hidden Input */}
         <input
           type="file"
           accept=".pdf"
           multiple
           onChange={handleFileChange}
-          style={{ marginBottom: '15px' }}
+          ref={fileInputRef}
+          style={{ display: 'none' }}
         />
-        <div className="upload-box">
-          {files ? <p>{files.length} files selected</p> : <p>Select or Drop PDF files here</p>}
+
+        {/* Custom Upload Box */}
+        <div
+          className={`upload-box ${isDragging ? 'dragging' : ''}`}
+          onClick={handleBoxClick}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <div className="icon">📂</div>
+          {files ? (
+            <p className="file-count">{files.length} files selected</p>
+          ) : (
+            <p>Click to select or <br/> <strong>Drag & Drop PDF files here</strong></p>
+          )}
         </div>
       </div>
 
